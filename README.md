@@ -57,7 +57,8 @@ Si en algún momento el panel muestra algo raro (por ejemplo, después de import
 
 ## 4) Fotos y videos
 
-- **Fotos**: se suben directo desde el panel (se guardan como imagen embebida en tu vista previa). Para que también queden livianas y rápidas en producción, lo ideal es optimizarlas (JPG/WebP, idealmente <500 KB) antes de subirlas, y una vez exportado el JSON, reemplazar también las imágenes pesadas en base64 por archivos reales dentro de `/assets` con una ruta corta (ej. `assets/foto-1.jpg`) si el archivo `config.json` queda muy pesado.
+- **Fotos y logo**: se suben directo desde el panel. El propio navegador las redimensiona y comprime antes de guardarlas (fotos: hasta 1600px de lado, JPG calidad 85%; logo: hasta 1000px, PNG para conservar la transparencia), así una foto de cámara de varios MB queda en un tamaño manejable automáticamente. Aun así, `localStorage` tiene un límite de unos 5 MB por sitio — en la pestaña **Ajustes** hay una barra que muestra cuánto espacio se está usando. Si se llena, exportá el JSON como respaldo y bajá el peso de alguna foto.
+- Para producción, si `config.json` termina pesando mucho por tener varias fotos en base64, conviene reemplazar esas imágenes por archivos reales dentro de `/assets` (ej. `assets/foto-1.jpg`) y poner esa ruta en el campo correspondiente en vez de subir el archivo — el resultado es un sitio más liviano y rápido.
 - **Videos**: se referencian por URL a un archivo `.mp4` (no YouTube/Vimeo, que no se pueden insertar como `<video>` directo). Lo más simple es subir los `.mp4` a la carpeta `/assets` del repo y usar una ruta relativa, por ejemplo `assets/campana-1.mp4`.
 
 ## 5) Funcionalidades incluidas

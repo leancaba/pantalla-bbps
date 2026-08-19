@@ -7,7 +7,7 @@
 <meta name="description" content="Tu marca en la puerta de entrada del Bahía Blanca Plaza Shopping. Propuesta comercial de pantalla LED.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0a0a0a;
@@ -20,8 +20,8 @@
   --gold:#CDA35A;
   --silver:#B9BCC2;
   --line:rgba(247,245,239,0.14);
-  --display: 'Baloo 2', sans-serif;
-  --body-f: 'Inter', sans-serif;
+  --display: 'Poppins', sans-serif;
+  --body-f: 'Poppins', sans-serif;
   --mono: 'JetBrains Mono', monospace;
   --vh: 1vh;
 }
@@ -705,6 +705,13 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     <!-- CONFIG TAB -->
     <div class="admin-section" data-tab="config">
       <div class="field"><label>Cambiar clave de acceso</label><input type="password" id="f_newPass" placeholder="Nueva clave"></div>
+      <div class="field">
+        <label>Espacio usado en este navegador</label>
+        <div style="background:#171717;border:1px solid var(--line);border-radius:8px;overflow:hidden;height:8px;">
+          <div id="storageBar" style="height:100%;width:0%;background:var(--yellow);transition:width .3s;"></div>
+        </div>
+        <small id="storageText">Calculando…</small>
+      </div>
       <p class="mini-note"><b>Cómo publicar cambios para todos los visitantes:</b> lo que edites acá se guarda solo en este navegador, como vista previa. Para que se vea igual para cualquier persona que entre al sitio: 1) hacé tus cambios y guardalos, 2) tocá "Exportar JSON", 3) reemplazá el archivo <code>config.json</code> del repositorio por ese archivo exportado, 4) subí el cambio a GitHub (commit + push). Vercel va a redesplegar el sitio automáticamente en un minuto.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn secondary" id="exportBtn">Exportar JSON</button>
@@ -797,8 +804,11 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     return base;
   }
   function persist(){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); }
-    catch(e){ alert("No se pudo guardar (el almacenamiento del navegador está lleno o bloqueado). Probá con imágenes más livianas o exportá el JSON como respaldo."); }
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); return true; }
+    catch(e){
+      alert("No se pudo guardar: el almacenamiento del navegador se llenó con las imágenes cargadas. Las fotos y el logo ahora se comprimen automáticamente al subirlas, así que probá sacar alguna foto pesada y volver a subirla, o exportá el JSON como respaldo desde la pestaña Ajustes antes de seguir editando.");
+      return false;
+    }
   }
 
   /* ---------------- render ---------------- */
@@ -857,6 +867,20 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
 
     resetStatObserver();
     resetPlanObserver();
+    refreshStorageUsage();
+  }
+
+  function refreshStorageUsage(){
+    const bar = el('storageBar'), txt = el('storageText');
+    if(!bar || !txt) return;
+    try{
+      const bytes = new Blob([JSON.stringify(config)]).size;
+      const approxLimit = 5 * 1024 * 1024; // 5 MB aprox. — el límite real varía según el navegador
+      const pct = Math.min(100, Math.round((bytes/approxLimit)*100));
+      bar.style.width = pct + '%';
+      bar.style.background = pct > 85 ? 'var(--red)' : 'var(--yellow)';
+      txt.textContent = (bytes/1024/1024).toFixed(2) + ' MB usados de ~5 MB disponibles (aproximado). Si se acerca al máximo, usá fotos más livianas.';
+    }catch(e){ txt.textContent = 'No se pudo calcular.'; }
   }
 
   function escapeHtml(s){
@@ -1083,6 +1107,15 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     });
   });
 
+  el('f_logosFile').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    // Se mantiene como PNG para conservar la transparencia del logo, con un ancho tope generoso.
+    compressImage(file, {maxDim:1000, quality:0.92, mime:'image/png'})
+      .then(dataUrl=>{ config.hero.logos = dataUrl; render(); refreshStorageUsage(); })
+      .catch(()=> alert('No se pudo procesar esa imagen. Probá con otro archivo.'));
+  });
+
   function buildPhotoFields(){
     const wrap = el('photoFields');
     wrap.innerHTML = '';
@@ -1099,7 +1132,11 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     wrap.querySelectorAll('input[type=file]').forEach(inp=>{
       inp.addEventListener('change', (e)=>{
         const i = parseInt(inp.dataset.photoIndex);
-        readFileAsDataUrl(e.target.files[0], (dataUrl)=>{ config.ubicacion.photos[i]=dataUrl; render(); });
+        const file = e.target.files[0];
+        if(!file) return;
+        compressImage(file, {maxDim:1600, quality:0.85, mime:'image/jpeg'})
+          .then(dataUrl=>{ config.ubicacion.photos[i]=dataUrl; render(); refreshStorageUsage(); })
+          .catch(()=> alert('No se pudo procesar esa imagen. Probá con otro archivo.'));
       });
     });
     wrap.querySelectorAll('[data-clear-photo]').forEach(btn=>{
@@ -1121,6 +1158,39 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
       inp.addEventListener('change', ()=>{
         config.campanas.videos[parseInt(inp.dataset.videoIndex)] = inp.value.trim();
       });
+    });
+  }
+
+  // Redimensiona y comprime la imagen en el propio navegador antes de guardarla,
+  // así una foto de cámara de 4-8 MB queda en un tamaño razonable para localStorage.
+  function compressImage(file, opts){
+    opts = opts || {};
+    const maxDim = opts.maxDim || 1600;
+    const quality = opts.quality != null ? opts.quality : 0.85;
+    const mime = opts.mime || 'image/jpeg';
+    return new Promise((resolve, reject)=>{
+      if(!file){ reject(new Error('Sin archivo')); return; }
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        const img = new Image();
+        img.onload = ()=>{
+          let {width, height} = img;
+          if(width > maxDim || height > maxDim){
+            if(width >= height){ height = Math.round(height * (maxDim/width)); width = maxDim; }
+            else { width = Math.round(width * (maxDim/height)); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          try{ resolve(canvas.toDataURL(mime, quality)); }
+          catch(err){ reject(err); }
+        };
+        img.onerror = ()=> reject(new Error('No se pudo leer la imagen'));
+        img.src = reader.result;
+      };
+      reader.onerror = ()=> reject(new Error('No se pudo leer el archivo'));
+      reader.readAsDataURL(file);
     });
   }
 
