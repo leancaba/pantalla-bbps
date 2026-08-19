@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BBPS x CCA Cinemacenter — Pantalla LED de entrada</title>
+<meta name="description" content="Tu marca en la puerta de entrada del Bahía Blanca Plaza Shopping. Propuesta comercial de pantalla LED.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a;
+  --bg-soft:#121212;
+  --yellow:#FFD400;
+  --yellow-dim:#c9a900;
+  --red:#E5121B;
+  --red-dim:#a80d14;
+  --white:#F7F5EF;
+  --gold:#CDA35A;
+  --silver:#B9BCC2;
+  --line:rgba(247,245,239,0.14);
+  --display: 'Baloo 2', sans-serif;
+  --body-f: 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --vh: 1vh;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:var(--body-f);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--yellow);color:#0a0a0a;}
+a{color:inherit;}
+button{font-family:inherit;}
+
+/* ---------- scanline / led ambience ---------- */
+.scan-overlay{
+  position:fixed;inset:0;pointer-events:none;z-index:5;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.028) 0px,
+    rgba(255,255,255,0.028) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  mix-blend-mode:overlay;
+  opacity:.6;
+}
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:4;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 100%);
+}
+
+/* ---------- scroll container: block by block ---------- */
+.scroll-container{
+  height:100vh;
+  height:calc(var(--vh, 1vh) * 100);
+  overflow-y:scroll;
+  scroll-snap-type:y mandatory;
+  scroll-behavior:smooth;
+}
+.panel{
+  position:relative;
+  height:100vh;
+  height:calc(var(--vh, 1vh) * 100);
+  width:100%;
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(20px,4vw,60px);
+  overflow:hidden;
+}
+.panel-inner{
+  width:100%;
+  max-width:1180px;
+  margin:0 auto;
+  position:relative;
+  z-index:2;
+}
+
+/* ---------- side dot nav ---------- */
+.dots-nav{
+  position:fixed;
+  right:clamp(14px,3vw,34px);
+  top:50%;
+  transform:translateY(-50%);
+  z-index:40;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.dots-nav button{
+  width:11px;height:11px;border-radius:50%;
+  border:1.5px solid rgba(247,245,239,0.5);
+  background:transparent;
+  cursor:pointer;
+  padding:0;
+  transition:transform .25s ease, background .25s ease, border-color .25s ease;
+  position:relative;
+}
+.dots-nav button::after{
+  content:attr(data-label);
+  position:absolute;
+  right:22px;top:50%;
+  transform:translateY(-50%);
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.05em;
+  white-space:nowrap;
+  color:var(--white);
+  opacity:0;
+  transition:opacity .2s ease;
+  background:rgba(10,10,10,0.85);
+  padding:3px 8px;
+  border-radius:4px;
+  border:1px solid var(--line);
+  pointer-events:none;
+}
+.dots-nav button:hover::after{opacity:1;}
+.dots-nav button.active{
+  background:var(--yellow);
+  border-color:var(--yellow);
+  transform:scale(1.25);
+}
+
+/* ---------- logos ---------- */
+.logos-row{display:flex;align-items:center;justify-content:center;gap:26px;}
+.logos-row img{height:clamp(46px,7vw,72px);width:auto;object-fit:contain;filter:drop-shadow(0 0 18px rgba(0,0,0,.5));}
+
+/* ---------- typography helpers ---------- */
+.eyebrow{
+  font-family:var(--mono);
+  font-size:clamp(11px,1.1vw,13px);
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--yellow);
+  text-align:center;
+  margin:0 0 10px;
+}
+h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
+.accent{color:var(--yellow);}
+.accent-red{color:var(--red);}
+
+/* ================= HERO ================= */
+.hero-panel{gap:clamp(14px,3vh,28px);}
+.hero-title{
+  text-align:center;
+  font-size:clamp(2.6rem,8.4vw,6.4rem);
+  letter-spacing:-.01em;
+}
+.hero-title .line2{
+  display:block;
+  font-size:clamp(1.35rem,4.2vw,2.7rem);
+  color:var(--white);
+  margin-top:6px;
+  letter-spacing:0;
+}
+.hero-media{
+  margin-top:clamp(10px,2.4vh,26px);
+  width:min(100%,720px);
+  aspect-ratio:9/13;
+  max-height:52vh;
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;
+  background:linear-gradient(160deg,var(--yellow),#e8c200);
+  box-shadow:0 30px 80px -20px rgba(255,212,0,.25), 0 0 0 1px rgba(255,255,255,.08);
+}
+.hero-media video{width:100%;height:100%;object-fit:cover;display:block;}
+.media-placeholder{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;color:#111;
+}
+.media-placeholder .ph-icon{font-size:34px;}
+.media-placeholder span{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em;}
+.media-controls{
+  position:absolute;left:12px;right:12px;bottom:12px;
+  display:flex;gap:8px;justify-content:flex-end;
+  opacity:0;transition:opacity .25s ease;
+}
+.hero-media:hover .media-controls, .carousel-item.is-center .media-controls{opacity:1;}
+.ctrl-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(10,10,10,0.65);
+  border:1px solid rgba(255,255,255,.25);
+  color:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  backdrop-filter:blur(4px);
+  font-size:15px;
+}
+.ctrl-btn:hover{background:rgba(10,10,10,0.9);}
+.scroll-cue{
+  font-family:var(--mono);
+  font-size:11px;letter-spacing:.15em;color:rgba(247,245,239,.55);
+  text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin-top:6px;
+}
+.scroll-cue .chevrons{display:flex;flex-direction:column;gap:0;}
+.scroll-cue .chevrons span{display:block;width:9px;height:9px;border-right:2px solid var(--yellow);border-bottom:2px solid var(--yellow);transform:rotate(45deg);margin-top:-3px;animation:cueDown 1.6s infinite;}
+.scroll-cue .chevrons span:nth-child(2){animation-delay:.15s;}
+@keyframes cueDown{0%{opacity:0;transform:translateY(-4px) rotate(45deg);}40%{opacity:1;}100%{opacity:0;transform:translateY(6px) rotate(45deg);}}
+
+/* ================= UBICACION ================= */
+.ubic-grid{
+  display:grid;
+  grid-template-columns:1.3fr 1fr;
+  gap:clamp(16px,2.6vw,34px);
+  align-items:stretch;
+}
+.photo-stack{display:grid;grid-template-rows:repeat(3,1fr);gap:clamp(10px,1.6vh,16px);height:100%;}
+.photo-box{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:linear-gradient(150deg,var(--red),#8f0d12);
+  min-height:100px;
+}
+.photo-box img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-box .media-placeholder{color:#2a0000;}
+.tech-card{
+  border:1.5px solid var(--line);
+  border-radius:22px;
+  padding:clamp(20px,2.4vw,32px);
+  display:flex;flex-direction:column;
+  justify-content:center;
+  gap:14px;
+  background:radial-gradient(circle at 30% 0%, rgba(255,212,0,0.05), transparent 60%);
+}
+.tech-card h3{font-size:clamp(1.3rem,2vw,1.7rem);text-align:center;margin-bottom:6px;}
+.tech-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+.tech-list li{
+  font-family:var(--mono);
+  font-size:clamp(.86rem,1.15vw,1rem);
+  color:rgba(247,245,239,.85);
+  text-align:center;
+  border-bottom:1px dashed var(--line);
+  padding-bottom:12px;
+}
+.tech-list li:last-child{border-bottom:none;padding-bottom:0;}
+.tech-list b{color:var(--yellow);font-weight:700;}
+.section-title{
+  text-align:center;
+  font-size:clamp(1.6rem,3.6vw,2.6rem);
+  margin-bottom:clamp(18px,3vh,36px);
+}
+
+/* ================= DATOS ================= */
+.datos-panel{background:radial-gradient(ellipse at 50% 20%, #151201 0%, var(--bg) 60%);}
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:clamp(14px,2.4vw,28px);
+}
+.stat-card{
+  border-left:2px solid var(--yellow);
+  padding:6px 0 6px clamp(14px,1.8vw,22px);
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1);
+}
+.stat-card.in-view{opacity:1;transform:translateY(0);}
+.stat-num{
+  font-family:var(--mono);
+  font-weight:700;
+  font-size:clamp(1.9rem,5vw,3.4rem);
+  color:var(--yellow);
+  line-height:1;
+  letter-spacing:-.01em;
+  text-shadow:0 0 22px rgba(255,212,0,.35);
+}
+.stat-label{
+  margin-top:6px;
+  font-size:clamp(.82rem,1.15vw,1rem);
+  color:rgba(247,245,239,.8);
+  line-height:1.3;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.stat-card.audience .stat-num{font-size:clamp(1.4rem,3.4vw,2.1rem);}
+.datos-title{text-align:center;font-size:clamp(1.7rem,4vw,2.9rem);margin-bottom:clamp(20px,3.4vh,40px);max-width:820px;}
+
+/* ================= PLANES ================= */
+.planes-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:clamp(16px,2.4vw,28px);
+}
+.plan-card{
+  border-radius:20px;
+  border:1.5px solid var(--line);
+  padding:clamp(20px,2.4vw,30px);
+  position:relative;
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(30px) scale(.98);
+  transition:opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1);
+}
+.plan-card.in-view{opacity:1;transform:translateY(0) scale(1);}
+.plan-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:6px;
+}
+.plan-card.oro::before{background:linear-gradient(90deg,var(--gold),#f0d998);}
+.plan-card.plata::before{background:linear-gradient(90deg,var(--silver),#e6e7e9);}
+.plan-name{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,3vw,2.2rem);}
+.plan-card.oro .plan-name{color:var(--gold);}
+.plan-card.plata .plan-name{color:var(--silver);}
+.plan-price{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:800;font-family:var(--display);margin-top:6px;}
+.plan-price sup{font-size:.4em;font-family:var(--body-f);font-weight:600;color:rgba(247,245,239,.7);margin-left:4px;}
+.plan-perunit{font-family:var(--mono);font-size:.8rem;color:rgba(247,245,239,.55);margin-top:2px;}
+.plan-features{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:9px;}
+.plan-features li{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:clamp(.82rem,1vw,.94rem);
+  color:rgba(247,245,239,.9);
+}
+.plan-features li::before{content:"✓";color:var(--yellow);font-weight:700;flex-shrink:0;}
+
+/* ================= CAMPAÑAS ================= */
+.camp-title{text-align:center;margin-bottom:clamp(16px,2.6vh,30px);font-size:clamp(1.7rem,4vw,2.7rem);}
+.carousel{
+  position:relative;
+  width:100%;
+  height:clamp(220px,46vh,420px);
+  display:flex;align-items:center;justify-content:center;
+}
+.carousel-track{
+  position:relative;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+}
+.carousel-item{
+  position:absolute;
+  border-radius:16px;overflow:hidden;
+  background:linear-gradient(160deg,var(--yellow),#e8c200);
+  transition:all .5s cubic-bezier(.2,.8,.2,1);
+  cursor:pointer;
+  aspect-ratio:9/16;
+  height:100%;
+}
+.carousel-item video{width:100%;height:100%;object-fit:cover;display:block;}
+.carousel-item.is-center{
+  width:clamp(150px,24vw,240px);
+  z-index:3;opacity:1;filter:none;cursor:default;
+  box-shadow:0 26px 60px -14px rgba(0,0,0,.6);
+}
+.carousel-item.is-prev, .carousel-item.is-next{
+  width:clamp(90px,15vw,150px);
+  z-index:2;opacity:.55;filter:brightness(.6);
+}
+.carousel-item.is-prev{transform:translateX(calc(-1 * clamp(90px,15vw,170px)));}
+.carousel-item.is-next{transform:translateX(clamp(90px,15vw,170px));}
+.carousel-item.is-hidden{opacity:0;pointer-events:none;width:60px;}
+.carousel-item .media-controls{opacity:0;}
+.carousel-item.is-center:hover .media-controls{opacity:1;}
+.carousel-arrows{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:100%;display:flex;justify-content:space-between;
+  pointer-events:none;
+  padding:0 clamp(0px,1vw,10px);
+}
+.carousel-arrows button{
+  pointer-events:all;
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--line);color:var(--white);
+  font-size:16px;cursor:pointer;
+}
+.carousel-arrows button:hover{background:rgba(255,255,255,.14);}
+.contact-block{
+  text-align:center;margin-top:clamp(22px,3.6vh,42px);
+}
+.contact-title{
+  font-family:var(--mono);
+  color:var(--yellow);
+  letter-spacing:.14em;
+  font-size:clamp(.95rem,1.4vw,1.1rem);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.contact-block a{
+  display:block;
+  font-size:clamp(.95rem,1.6vw,1.2rem);
+  color:var(--white);
+  text-decoration:none;
+  border-bottom:1px solid transparent;
+}
+.contact-block a:hover{border-color:var(--yellow);color:var(--yellow);}
+.foot-logos{margin-top:clamp(18px,3vh,34px);}
+
+/* ================= admin FAB + panel ================= */
+.admin-fab{
+  position:fixed;bottom:20px;right:20px;z-index:100;
+  width:46px;height:46px;border-radius:50%;
+  background:var(--bg-soft);border:1px solid var(--line);
+  color:var(--white);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.admin-fab:hover{background:#1c1c1c;}
+.admin-panel{
+  position:fixed;top:0;right:0;height:100%;width:min(420px,100%);
+  background:#0e0e0e;border-left:1px solid var(--line);
+  z-index:200;transform:translateX(100%);
+  transition:transform .3s ease;
+  overflow-y:auto;
+  padding:22px 20px 60px;
+  font-size:14px;
+}
+.admin-panel.open{transform:translateX(0);}
+.admin-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.admin-head h2{font-family:var(--display);font-size:1.2rem;}
+.admin-close{background:none;border:none;color:var(--white);font-size:20px;cursor:pointer;}
+.admin-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+.admin-tabs button{
+  background:#1a1a1a;border:1px solid var(--line);color:rgba(247,245,239,.75);
+  padding:6px 10px;border-radius:20px;font-size:12px;cursor:pointer;
+}
+.admin-tabs button.active{background:var(--yellow);color:#111;border-color:var(--yellow);font-weight:700;}
+.admin-section{display:none;flex-direction:column;gap:14px;}
+.admin-section.active{display:flex;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:rgba(247,245,239,.55);font-family:var(--mono);}
+.field input[type=text], .field input[type=url], .field textarea, .field input[type=password]{
+  background:#171717;border:1px solid var(--line);color:var(--white);
+  border-radius:8px;padding:9px 10px;font-family:var(--body-f);font-size:13.5px;resize:vertical;
+}
+.field input:focus, .field textarea:focus{outline:2px solid var(--yellow);outline-offset:1px;}
+.field small{color:rgba(247,245,239,.4);font-size:11px;}
+.file-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.file-row input[type=file]{font-size:11px;color:rgba(247,245,239,.7);max-width:220px;}
+.btn{
+  background:var(--yellow);color:#111;border:none;border-radius:8px;
+  padding:9px 14px;font-weight:700;cursor:pointer;font-size:13px;
+}
+.btn.secondary{background:transparent;color:var(--white);border:1px solid var(--line);}
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--red);}
+.admin-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;border-top:1px solid var(--line);padding-top:18px;}
+.admin-lock{display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
+.hidden{display:none !important;}
+.repeat-item{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;}
+.mini-note{font-size:11px;color:rgba(247,245,239,.45);line-height:1.4;}
+.save-flash{font-size:12px;color:var(--yellow);opacity:0;transition:opacity .3s;}
+.save-flash.show{opacity:1;}
+
+@media (max-width:760px){
+  .ubic-grid{grid-template-columns:1fr;}
+  .photo-stack{grid-template-rows:repeat(3,110px);}
+  .stats-grid{grid-template-columns:1fr;}
+  .planes-grid{grid-template-columns:1fr;}
+  .dots-nav{right:8px;}
+  .dots-nav button::after{display:none;}
+  .logos-row img{height:38px;}
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; transition-duration:.15s !important;}
+}
+
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<div class="vignette"></div>
+<div class="scan-overlay"></div>
+
+<nav class="dots-nav" aria-label="Navegación por secciones">
+  <button data-target="hero" data-label="Inicio" class="active" aria-label="Ir a Inicio"></button>
+  <button data-target="ubicacion" data-label="Ubicación" aria-label="Ir a Ubicación"></button>
+  <button data-target="datos" data-label="Datos" aria-label="Ir a Datos"></button>
+  <button data-target="planes" data-label="Planes" aria-label="Ir a Planes"></button>
+  <button data-target="campanas" data-label="Campañas" aria-label="Ir a Campañas"></button>
+</nav>
+
+<button class="admin-fab" id="adminToggle" title="Panel de administración" aria-label="Abrir panel de administración">⚙</button>
+
+<main class="scroll-container" id="scrollContainer">
+
+  <!-- ============ HERO ============ -->
+  <section class="panel hero-panel" id="hero">
+    <div class="panel-inner" style="display:flex;flex-direction:column;align-items:center;">
+      <div class="logos-row">
+        <img src="assets/logos.png" alt="Bahía Blanca Plaza Shopping y CCA Cinemacenter" id="heroLogos">
+      </div>
+      <h1 class="hero-title" style="margin-top:clamp(14px,3vh,30px);">
+        <span class="accent" id="heroTitle1">TU MARCA</span>
+        <span class="line2" id="heroTitle2">EN LA PUERTA DE<br>ENTRADA DEL BBPS</span>
+      </h1>
+      <div class="hero-media" id="heroMedia">
+        <div class="media-placeholder" id="heroMediaPlaceholder">
+          <div class="ph-icon">▶</div>
+          <span>VIDEO</span>
+        </div>
+        <video id="heroVideo" class="hidden" muted loop playsinline></video>
+        <div class="media-controls">
+          <button class="ctrl-btn" id="heroPlayBtn" aria-label="Reproducir o pausar">⏸</button>
+          <button class="ctrl-btn" id="heroMuteBtn" aria-label="Silenciar o activar sonido">🔇</button>
+        </div>
+      </div>
+      <div class="scroll-cue"><span>Deslizá</span><div class="chevrons"><span></span><span></span></div></div>
+    </div>
+  </section>
+
+  <!-- ============ UBICACION ============ -->
+  <section class="panel" id="ubicacion">
+    <div class="panel-inner">
+      <h2 class="section-title" id="ubicTitle">UBICACIÓN DE ALTO IMPACTO<br>Y VALOR COMERCIAL</h2>
+      <div class="ubic-grid">
+        <div class="photo-stack" id="photoStack">
+          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><img class="hidden" alt="Foto de la ubicación 1"></div>
+          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><img class="hidden" alt="Foto de la ubicación 2"></div>
+          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><img class="hidden" alt="Foto de la ubicación 3"></div>
+        </div>
+        <div class="tech-card">
+          <h3>DATOS TÉCNICOS</h3>
+          <ul class="tech-list" id="techList">
+            <li><b>20 M2</b> – Pantalla superior</li>
+            <li><b>6 M2</b> – Laterales</li>
+            <li><b>2432 x 1024 PX</b> – Canvas total</li>
+            <li><b>P3.9</b> – Tecnología LED</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DATOS ============ -->
+  <section class="panel datos-panel" id="datos">
+    <div class="panel-inner">
+      <h2 class="datos-title" style="margin-left:auto;margin-right:auto;" id="datosTitle">UNA UBICACIÓN QUE <span class="accent">NO SE PUEDE IGNORAR</span></h2>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card" data-target="350000" data-format="dot">
+          <div class="stat-num">0</div>
+          <div class="stat-label">Personas por mes</div>
+        </div>
+        <div class="stat-card" data-target="16" data-format="plain" data-suffix=" HORAS">
+          <div class="stat-num">0</div>
+          <div class="stat-label">De exposición diaria</div>
+        </div>
+        <div class="stat-card" data-target="4800" data-format="plain">
+          <div class="stat-num">0</div>
+          <div class="stat-label">Emisiones mensuales</div>
+        </div>
+        <div class="stat-card" data-target="9000000" data-format="dot">
+          <div class="stat-num">0</div>
+          <div class="stat-label">De contactos mensuales (considerando visibilidad desde la avenida y accesos)</div>
+        </div>
+      </div>
+      <div class="stat-card audience" style="border-left:2px solid var(--red);margin-top:22px;text-align:center;border-left:none;border-top:2px solid var(--red);padding:16px 0 0;">
+        <div class="stat-num" style="color:var(--yellow);">AUDIENCIA ABC1/C2</div>
+        <div class="stat-label">Familias, jóvenes y consumidores con alto poder de compra</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PLANES ============ -->
+  <section class="panel" id="planes">
+    <div class="panel-inner">
+      <h2 class="section-title">PLANES</h2>
+      <div class="planes-grid" id="planesGrid">
+        <div class="plan-card oro">
+          <div class="plan-name">ORO</div>
+          <div class="plan-price">$2.000.000 <sup>+IVA /mes</sup></div>
+          <div class="plan-perunit">Costo por emisión de $416,67</div>
+          <ul class="plan-features">
+            <li>Spot de 20 segundos</li>
+            <li>Frecuencia de 10 veces por hora</li>
+            <li>160 emisiones diarias</li>
+            <li>4800 emisiones mensuales</li>
+            <li>20% OFF a locatarios del BBPS</li>
+          </ul>
+        </div>
+        <div class="plan-card plata">
+          <div class="plan-name">PLATA</div>
+          <div class="plan-price">$1.500.000 <sup>+IVA /mes</sup></div>
+          <div class="plan-perunit">Costo por emisión de $520,83</div>
+          <ul class="plan-features">
+            <li>Spot de 15 segundos</li>
+            <li>Frecuencia de 6 veces por hora</li>
+            <li>160 emisiones diarias</li>
+            <li>2880 emisiones mensuales</li>
+            <li>20% OFF a locatarios del BBPS</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CAMPAÑAS ============ -->
+  <section class="panel" id="campanas">
+    <div class="panel-inner">
+      <h2 class="camp-title" id="campTitle">ALGUNAS DE NUESTRAS<br><span class="accent">CAMPAÑAS</span></h2>
+      <div class="carousel" id="carousel">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <div class="carousel-arrows">
+          <button id="carPrev" aria-label="Video anterior">‹</button>
+          <button id="carNext" aria-label="Video siguiente">›</button>
+        </div>
+      </div>
+      <div class="contact-block">
+        <div class="contact-title">Contactános</div>
+        <a href="mailto:comercial@bbps.com.ar" id="contactMail1">comercial@bbps.com.ar</a>
+        <a href="mailto:gzamora@cinemacenter.com.ar" id="contactMail2">gzamora@cinemacenter.com.ar</a>
+        <div class="foot-logos logos-row">
+          <img src="assets/logos.png" alt="Bahía Blanca Plaza Shopping y CCA Cinemacenter" style="height:44px;">
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ ADMIN PANEL ============ -->
+<div class="admin-panel" id="adminPanel" role="dialog" aria-label="Panel de administración de contenido">
+  <div class="admin-head">
+    <h2>Panel de edición</h2>
+    <button class="admin-close" id="adminCloseBtn" aria-label="Cerrar">✕</button>
+  </div>
+
+  <div id="lockScreen" class="admin-lock">
+    <p class="mini-note">Ingresá la clave para editar los contenidos de la página. (Clave por defecto: <b>bbps2026</b>, se puede cambiar dentro del panel).</p>
+    <div class="field" style="width:100%;">
+      <label for="passInput">Clave de acceso</label>
+      <input type="password" id="passInput">
+    </div>
+    <button class="btn" id="unlockBtn">Ingresar</button>
+  </div>
+
+  <div id="editScreen" class="hidden">
+    <div class="admin-tabs" id="adminTabs">
+      <button data-tab="hero" class="active">Inicio</button>
+      <button data-tab="ubicacion">Ubicación</button>
+      <button data-tab="datos">Datos</button>
+      <button data-tab="planes">Planes</button>
+      <button data-tab="campanas">Campañas</button>
+      <button data-tab="config">Ajustes</button>
+    </div>
+
+    <!-- HERO TAB -->
+    <div class="admin-section active" data-tab="hero">
+      <div class="field"><label>Título principal (amarillo)</label><input type="text" id="f_heroTitle1"></div>
+      <div class="field"><label>Subtítulo (usar salto de línea con /)</label><textarea id="f_heroTitle2" rows="2"></textarea></div>
+      <div class="field">
+        <label>Video principal</label>
+        <input type="url" id="f_heroVideoUrl" placeholder="https://.../video.mp4">
+        <small>Pegá la URL de un video (mp4) alojado en tu servidor, Youtube/Vimeo no se insertan directo — se recomienda mp4 directo.</small>
+      </div>
+      <div class="field">
+        <label>Logos (imagen combinada)</label>
+        <div class="file-row"><input type="file" id="f_logosFile" accept="image/*"></div>
+        <small>Se guarda como imagen embebida. Preferí un PNG optimizado (&lt;500kb) para que la clave de guardado no pese demasiado.</small>
+      </div>
+    </div>
+
+    <!-- UBICACION TAB -->
+    <div class="admin-section" data-tab="ubicacion">
+      <div class="field"><label>Título de sección</label><textarea id="f_ubicTitle" rows="2"></textarea></div>
+      <div id="photoFields"></div>
+      <div class="field"><label>Ítems de datos técnicos (uno por línea, formato: Negrita | Texto)</label>
+        <textarea id="f_techList" rows="5"></textarea>
+        <small>Ejemplo de línea: 20 M2 | Pantalla superior</small>
+      </div>
+    </div>
+
+    <!-- DATOS TAB -->
+    <div class="admin-section" data-tab="datos">
+      <div class="field"><label>Título de sección</label><textarea id="f_datosTitle" rows="2"></textarea></div>
+      <div class="field"><label>Personas por mes</label><input type="text" id="f_stat1"></div>
+      <div class="field"><label>Horas de exposición diaria</label><input type="text" id="f_stat2"></div>
+      <div class="field"><label>Emisiones mensuales</label><input type="text" id="f_stat3"></div>
+      <div class="field"><label>Contactos mensuales</label><input type="text" id="f_stat4"></div>
+      <div class="field"><label>Descripción de contactos</label><input type="text" id="f_stat4label"></div>
+      <div class="field"><label>Audiencia (título)</label><input type="text" id="f_audienceTitle"></div>
+      <div class="field"><label>Audiencia (descripción)</label><textarea id="f_audienceDesc" rows="2"></textarea></div>
+    </div>
+
+    <!-- PLANES TAB -->
+    <div class="admin-section" data-tab="planes">
+      <p class="mini-note">Plan ORO</p>
+      <div class="field"><label>Precio</label><input type="text" id="f_oroPrice"></div>
+      <div class="field"><label>Costo por emisión</label><input type="text" id="f_oroPerUnit"></div>
+      <div class="field"><label>Características (una por línea)</label><textarea id="f_oroFeatures" rows="5"></textarea></div>
+      <hr style="border-color:var(--line);width:100%;">
+      <p class="mini-note">Plan PLATA</p>
+      <div class="field"><label>Precio</label><input type="text" id="f_plataPrice"></div>
+      <div class="field"><label>Costo por emisión</label><input type="text" id="f_plataPerUnit"></div>
+      <div class="field"><label>Características (una por línea)</label><textarea id="f_plataFeatures" rows="5"></textarea></div>
+    </div>
+
+    <!-- CAMPAÑAS TAB -->
+    <div class="admin-section" data-tab="campanas">
+      <div class="field"><label>Título de sección</label><textarea id="f_campTitle" rows="2"></textarea></div>
+      <div id="videoFields"></div>
+      <div class="field"><label>Email de contacto 1</label><input type="text" id="f_mail1"></div>
+      <div class="field"><label>Email de contacto 2</label><input type="text" id="f_mail2"></div>
+    </div>
+
+    <!-- CONFIG TAB -->
+    <div class="admin-section" data-tab="config">
+      <div class="field"><label>Cambiar clave de acceso</label><input type="password" id="f_newPass" placeholder="Nueva clave"></div>
+      <p class="mini-note"><b>Cómo publicar cambios para todos los visitantes:</b> lo que edites acá se guarda solo en este navegador, como vista previa. Para que se vea igual para cualquier persona que entre al sitio: 1) hacé tus cambios y guardalos, 2) tocá "Exportar JSON", 3) reemplazá el archivo <code>config.json</code> del repositorio por ese archivo exportado, 4) subí el cambio a GitHub (commit + push). Vercel va a redesplegar el sitio automáticamente en un minuto.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn secondary" id="exportBtn">Exportar JSON</button>
+        <label class="btn secondary" style="cursor:pointer;">Importar JSON<input type="file" id="importInput" accept="application/json" class="hidden"></label>
+      </div>
+      <button class="btn danger" id="resetBtn" style="margin-top:10px;width:fit-content;">Restaurar contenido original</button>
+    </div>
+
+    <div class="admin-actions">
+      <button class="btn" id="saveBtn">Guardar cambios</button>
+      <span class="save-flash" id="saveFlash">Guardado ✓</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- viewport height fix (mobile) ---------------- */
+  function setVh(){document.documentElement.style.setProperty('--vh', (window.innerHeight*0.01)+'px');}
+  setVh();window.addEventListener('resize', setVh);
+
+  /* ---------------- default content model ----------------
+     Este objeto es el "respaldo" incluido en el propio HTML.
+     El contenido real y editable vive en /config.json — al cargar
+     la página se intenta leer ese archivo y sus valores pisan estos
+     valores por defecto. Ver README.md para el flujo de publicación. */
+  let DEFAULTS = {
+    password:"bbps2026",
+    hero:{
+      title1:"TU MARCA",
+      title2:"EN LA PUERTA DE/ENTRADA DEL BBPS",
+      videoUrl:"",
+      logos:"assets/logos.png"
+    },
+    ubicacion:{
+      title:"UBICACIÓN DE ALTO IMPACTO/Y VALOR COMERCIAL",
+      photos:["","",""],
+      tech:[
+        {b:"20 M2", t:"Pantalla superior"},
+        {b:"6 M2", t:"Laterales"},
+        {b:"2432 x 1024 PX", t:"Canvas total"},
+        {b:"P3.9", t:"Tecnología LED"}
+      ]
+    },
+    datos:{
+      title:"UNA UBICACIÓN QUE ||NO SE PUEDE IGNORAR",
+      stat1:"350.000", stat1label:"Personas por mes",
+      stat2:"16", stat2label:"De exposición diaria",
+      stat3:"4800", stat3label:"Emisiones mensuales",
+      stat4:"9.000.000", stat4label:"De contactos mensuales (considerando visibilidad desde la avenida y accesos)",
+      audienceTitle:"AUDIENCIA ABC1/C2",
+      audienceDesc:"Familias, jóvenes y consumidores con alto poder de compra"
+    },
+    planes:{
+      oro:{price:"$2.000.000", perunit:"Costo por emisión de $416,67",
+        features:["Spot de 20 segundos","Frecuencia de 10 veces por hora","160 emisiones diarias","4800 emisiones mensuales","20% OFF a locatarios del BBPS"]},
+      plata:{price:"$1.500.000", perunit:"Costo por emisión de $520,83",
+        features:["Spot de 15 segundos","Frecuencia de 6 veces por hora","160 emisiones diarias","2880 emisiones mensuales","20% OFF a locatarios del BBPS"]}
+    },
+    campanas:{
+      title:"ALGUNAS DE NUESTRAS||CAMPAÑAS",
+      videos:["","",""],
+      mail1:"comercial@bbps.com.ar",
+      mail2:"gzamora@cinemacenter.com.ar"
+    }
+  };
+
+  const STORAGE_KEY = "bbps_landing_config_v1";
+  let config = null;
+
+  function loadConfig(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return deepMerge(JSON.parse(JSON.stringify(DEFAULTS)), JSON.parse(raw));
+    }catch(e){ console.warn("No se pudo leer configuración guardada", e); }
+    return JSON.parse(JSON.stringify(DEFAULTS));
+  }
+  function deepMerge(base, extra){
+    if(typeof extra !== 'object' || extra===null) return extra===undefined?base:extra;
+    if(Array.isArray(base)) return extra;
+    for(const k in extra){
+      if(base && typeof base[k]==='object' && base[k]!==null){
+        base[k]=deepMerge(base[k], extra[k]);
+      } else {
+        base[k]=extra[k];
+      }
+    }
+    return base;
+  }
+  function persist(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); }
+    catch(e){ alert("No se pudo guardar (el almacenamiento del navegador está lleno o bloqueado). Probá con imágenes más livianas o exportá el JSON como respaldo."); }
+  }
+
+  /* ---------------- render ---------------- */
+  function el(id){return document.getElementById(id);}
+
+  function render(){
+    // HERO
+    el('heroTitle1').textContent = config.hero.title1;
+    el('heroTitle2').innerHTML = config.hero.title2.split('/').map(escapeHtml).join('<br>');
+    if(config.hero.logos){ el('heroLogos').src = config.hero.logos; document.querySelectorAll('.foot-logos img').forEach(i=>i.src=config.hero.logos); }
+    setMedia(el('heroVideo'), el('heroMediaPlaceholder'), config.hero.videoUrl);
+
+    // UBICACION
+    el('ubicTitle').innerHTML = config.ubicacion.title.split('/').map(escapeHtml).join('<br>');
+    const photoBoxes = document.querySelectorAll('#photoStack .photo-box');
+    photoBoxes.forEach((box,i)=>{
+      const img = box.querySelector('img');
+      const ph = box.querySelector('.media-placeholder');
+      const src = config.ubicacion.photos[i];
+      if(src){ img.src=src; img.classList.remove('hidden'); ph.classList.add('hidden'); }
+      else { img.classList.add('hidden'); ph.classList.remove('hidden'); }
+    });
+    el('techList').innerHTML = config.ubicacion.tech.map(item=>`<li><b>${escapeHtml(item.b)}</b> – ${escapeHtml(item.t)}</li>`).join('');
+
+    // DATOS
+    el('datosTitle').innerHTML = config.datos.title.split('||').map((s,i)=> i===1 ? `<span class="accent">${escapeHtml(s)}</span>` : escapeHtml(s)).join(' ');
+    const statCards = document.querySelectorAll('#statsGrid .stat-card');
+    const statVals = [config.datos.stat1, config.datos.stat2, config.datos.stat3, config.datos.stat4];
+    const statLabels = [config.datos.stat1label, config.datos.stat2label, config.datos.stat3label, config.datos.stat4label];
+    statCards.forEach((card,i)=>{
+      card.dataset.display = statVals[i];
+      card.querySelector('.stat-label').textContent = statLabels[i];
+      card.querySelector('.stat-num').textContent = '0';
+      card.classList.remove('in-view');
+    });
+    document.querySelector('.stat-card.audience .stat-num').textContent = config.datos.audienceTitle;
+    document.querySelector('.stat-card.audience .stat-label').textContent = config.datos.audienceDesc;
+
+    // PLANES
+    const oroCard = document.querySelector('.plan-card.oro');
+    oroCard.querySelector('.plan-price').innerHTML = escapeHtml(config.planes.oro.price)+' <sup>+IVA /mes</sup>';
+    oroCard.querySelector('.plan-perunit').textContent = config.planes.oro.perunit;
+    oroCard.querySelector('.plan-features').innerHTML = config.planes.oro.features.map(f=>`<li>${escapeHtml(f)}</li>`).join('');
+    const plataCard = document.querySelector('.plan-card.plata');
+    plataCard.querySelector('.plan-price').innerHTML = escapeHtml(config.planes.plata.price)+' <sup>+IVA /mes</sup>';
+    plataCard.querySelector('.plan-perunit').textContent = config.planes.plata.perunit;
+    plataCard.querySelector('.plan-features').innerHTML = config.planes.plata.features.map(f=>`<li>${escapeHtml(f)}</li>`).join('');
+
+    // CAMPAÑAS
+    el('campTitle').innerHTML = config.campanas.title.split('||').map((s,i)=> i===1 ? `<span class="accent">${escapeHtml(s)}</span>` : escapeHtml(s)).join('<br>');
+    el('contactMail1').textContent = config.campanas.mail1;
+    el('contactMail1').href = 'mailto:'+config.campanas.mail1;
+    el('contactMail2').textContent = config.campanas.mail2;
+    el('contactMail2').href = 'mailto:'+config.campanas.mail2;
+    buildCarousel();
+
+    resetStatObserver();
+    resetPlanObserver();
+  }
+
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function setMedia(videoEl, placeholderEl, url){
+    if(url){
+      videoEl.src = url;
+      videoEl.classList.remove('hidden');
+      placeholderEl.classList.add('hidden');
+      videoEl.muted = true; videoEl.play().catch(()=>{});
+    } else {
+      videoEl.removeAttribute('src');
+      videoEl.classList.add('hidden');
+      placeholderEl.classList.remove('hidden');
+    }
+  }
+
+  /* ---------------- hero media controls ---------------- */
+  el('heroPlayBtn').addEventListener('click', ()=>{
+    const v = el('heroVideo');
+    if(v.classList.contains('hidden')) return;
+    if(v.paused){ v.play(); el('heroPlayBtn').textContent='⏸'; }
+    else { v.pause(); el('heroPlayBtn').textContent='▶'; }
+  });
+  el('heroMuteBtn').addEventListener('click', ()=>{
+    const v = el('heroVideo');
+    v.muted = !v.muted;
+    el('heroMuteBtn').textContent = v.muted ? '🔇' : '🔊';
+  });
+
+  /* ---------------- stat counters ---------------- */
+  let statObserver = null;
+  function resetStatObserver(){
+    if(statObserver) statObserver.disconnect();
+    const cards = document.querySelectorAll('#statsGrid .stat-card');
+    statObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          animateCount(entry.target);
+        }
+      });
+    }, {threshold:0.4});
+    cards.forEach((c,i)=>{ c.style.transitionDelay = (i*0.08)+'s'; statObserver.observe(c); });
+  }
+  function parseDisplayNumber(str){
+    const clean = String(str).replace(/[^\d]/g,'');
+    return clean ? parseInt(clean,10) : null;
+  }
+  function animateCount(card){
+    const display = card.dataset.display;
+    const target = parseDisplayNumber(display);
+    const numEl = card.querySelector('.stat-num');
+    if(target===null){ numEl.textContent = display; return; }
+    const usesDot = /\./.test(display);
+    const suffix = display.replace(/[\d.]/g,'');
+    const duration = 1200;
+    const start = performance.now();
+    function frame(now){
+      const p = Math.min(1, (now-start)/duration);
+      const eased = 1 - Math.pow(1-p, 3);
+      const val = Math.round(target*eased);
+      numEl.textContent = (usesDot ? val.toLocaleString('es-AR') : String(val)) + suffix;
+      if(p<1) requestAnimationFrame(frame);
+      else numEl.textContent = display;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------------- plan cards entrance ---------------- */
+  let planObserver = null;
+  function resetPlanObserver(){
+    if(planObserver) planObserver.disconnect();
+    const cards = document.querySelectorAll('.plan-card');
+    planObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{ if(entry.isIntersecting) entry.target.classList.add('in-view'); });
+    }, {threshold:0.3});
+    cards.forEach((c,i)=>{ c.style.transitionDelay=(i*0.12)+'s'; planObserver.observe(c); });
+  }
+
+  /* ---------------- carousel ---------------- */
+  let carouselIndex = 0;
+  function buildCarousel(){
+    const track = el('carouselTrack');
+    track.innerHTML = '';
+    config.campanas.videos.forEach((url, i)=>{
+      const item = document.createElement('div');
+      item.className = 'carousel-item';
+      item.dataset.index = i;
+      item.innerHTML = `
+        <div class="media-placeholder"><div class="ph-icon">▶</div><span>VIDEO</span></div>
+        <video muted loop playsinline class="hidden"></video>
+        <div class="media-controls">
+          <button class="ctrl-btn play-btn" aria-label="Reproducir o pausar">⏸</button>
+          <button class="ctrl-btn mute-btn" aria-label="Silenciar o activar sonido">🔇</button>
+        </div>`;
+      const v = item.querySelector('video');
+      const ph = item.querySelector('.media-placeholder');
+      setMedia(v, ph, url);
+      item.querySelector('.play-btn').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(v.classList.contains('hidden')) return;
+        if(v.paused){ v.play(); e.currentTarget.textContent='⏸'; } else { v.pause(); e.currentTarget.textContent='▶'; }
+      });
+      item.querySelector('.mute-btn').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        v.muted = !v.muted;
+        e.currentTarget.textContent = v.muted ? '🔇' : '🔊';
+      });
+      item.addEventListener('click', ()=>{
+        if(parseInt(item.dataset.index)!==carouselIndex){ carouselIndex = parseInt(item.dataset.index); layoutCarousel(); }
+      });
+      track.appendChild(item);
+    });
+    layoutCarousel();
+  }
+  function layoutCarousel(){
+    const items = document.querySelectorAll('.carousel-item');
+    const n = items.length;
+    items.forEach((item,i)=>{
+      item.classList.remove('is-center','is-prev','is-next','is-hidden');
+      const v = item.querySelector('video');
+      if(i===carouselIndex){
+        item.classList.add('is-center');
+        if(!v.classList.contains('hidden')){ v.muted=true; v.play().catch(()=>{}); }
+      } else if(i === (carouselIndex-1+n)%n){
+        item.classList.add('is-prev');
+        if(!v.paused) v.pause();
+      } else if(i === (carouselIndex+1)%n){
+        item.classList.add('is-next');
+        if(!v.paused) v.pause();
+      } else {
+        item.classList.add('is-hidden');
+        if(!v.paused) v.pause();
+      }
+    });
+  }
+  el('carPrev').addEventListener('click', ()=>{ const n=config.campanas.videos.length; carouselIndex=(carouselIndex-1+n)%n; layoutCarousel(); });
+  el('carNext').addEventListener('click', ()=>{ const n=config.campanas.videos.length; carouselIndex=(carouselIndex+1)%config.campanas.videos.length; layoutCarousel(); });
+
+  /* ---------------- block scroll navigation ---------------- */
+  const container = el('scrollContainer');
+  const panels = Array.from(document.querySelectorAll('.panel'));
+  const dots = Array.from(document.querySelectorAll('.dots-nav button'));
+
+  dots.forEach(dot=>{
+    dot.addEventListener('click', ()=>{
+      const target = document.getElementById(dot.dataset.target);
+      target.scrollIntoView({behavior:'smooth'});
+    });
+  });
+
+  const panelObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && entry.intersectionRatio > 0.55){
+        const id = entry.target.id;
+        dots.forEach(d=> d.classList.toggle('active', d.dataset.target===id));
+      }
+    });
+  }, {threshold:[0.55]});
+  panels.forEach(p=>panelObserver.observe(p));
+
+  // wheel: snap crisply one block at a time (desktop)
+  let isAnimating = false;
+  container.addEventListener('wheel', function(e){
+    if(isAnimating) { e.preventDefault(); return; }
+    const delta = e.deltaY;
+    if(Math.abs(delta) < 4) return;
+    e.preventDefault();
+    const currentIndex = panels.findIndex(p=>{
+      const r = p.getBoundingClientRect();
+      return r.top >= -10 && r.top < window.innerHeight*0.5;
+    });
+    let idx = currentIndex === -1 ? 0 : currentIndex;
+    let nextIdx = delta > 0 ? Math.min(panels.length-1, idx+1) : Math.max(0, idx-1);
+    if(nextIdx === idx) return;
+    isAnimating = true;
+    panels[nextIdx].scrollIntoView({behavior:'smooth'});
+    setTimeout(()=>{ isAnimating=false; }, 700);
+  }, {passive:false});
+
+  // keyboard nav
+  window.addEventListener('keydown', (e)=>{
+    if(el('adminPanel').classList.contains('open')) return;
+    const currentIndex = panels.findIndex(p=>{
+      const r = p.getBoundingClientRect();
+      return r.top >= -10 && r.top < window.innerHeight*0.5;
+    });
+    let idx = currentIndex === -1 ? 0 : currentIndex;
+    if(e.key==='ArrowDown' || e.key==='PageDown'){ e.preventDefault(); panels[Math.min(panels.length-1, idx+1)].scrollIntoView({behavior:'smooth'}); }
+    if(e.key==='ArrowUp' || e.key==='PageUp'){ e.preventDefault(); panels[Math.max(0, idx-1)].scrollIntoView({behavior:'smooth'}); }
+  });
+
+  /* ---------------- admin panel logic ---------------- */
+  const adminPanel = el('adminPanel');
+  el('adminToggle').addEventListener('click', ()=>{ adminPanel.classList.add('open'); });
+  el('adminCloseBtn').addEventListener('click', ()=>{ adminPanel.classList.remove('open'); });
+
+  let unlocked = false;
+  el('unlockBtn').addEventListener('click', tryUnlock);
+  el('passInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
+  function tryUnlock(){
+    const val = el('passInput').value;
+    if(val === (config.password || DEFAULTS.password)){
+      unlocked = true;
+      el('lockScreen').classList.add('hidden');
+      el('editScreen').classList.remove('hidden');
+      fillAdminForm();
+    } else {
+      el('passInput').style.borderColor = 'var(--red)';
+      setTimeout(()=>{ el('passInput').style.borderColor=''; }, 900);
+    }
+  }
+
+  // tabs
+  document.querySelectorAll('#adminTabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#adminTabs button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector(`.admin-section[data-tab="${btn.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  function buildPhotoFields(){
+    const wrap = el('photoFields');
+    wrap.innerHTML = '';
+    config.ubicacion.photos.forEach((src,i)=>{
+      const div = document.createElement('div');
+      div.className = 'repeat-item';
+      div.innerHTML = `<label style="font-family:var(--mono);font-size:11px;color:rgba(247,245,239,.55);text-transform:uppercase;">Foto ${i+1}</label>
+        <div class="file-row">
+          <input type="file" accept="image/*" data-photo-index="${i}">
+          <button class="btn secondary" type="button" data-clear-photo="${i}">Quitar</button>
+        </div>`;
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('input[type=file]').forEach(inp=>{
+      inp.addEventListener('change', (e)=>{
+        const i = parseInt(inp.dataset.photoIndex);
+        readFileAsDataUrl(e.target.files[0], (dataUrl)=>{ config.ubicacion.photos[i]=dataUrl; render(); });
+      });
+    });
+    wrap.querySelectorAll('[data-clear-photo]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ config.ubicacion.photos[parseInt(btn.dataset.clearPhoto)]=''; render(); });
+    });
+  }
+
+  function buildVideoFields(){
+    const wrap = el('videoFields');
+    wrap.innerHTML = '';
+    config.campanas.videos.forEach((url,i)=>{
+      const div = document.createElement('div');
+      div.className = 'repeat-item';
+      div.innerHTML = `<label style="font-family:var(--mono);font-size:11px;color:rgba(247,245,239,.55);text-transform:uppercase;">Video ${i+1} (URL .mp4)</label>
+        <input type="url" value="${url ? url.replace(/"/g,'&quot;') : ''}" data-video-index="${i}" placeholder="https://.../video.mp4">`;
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('input[data-video-index]').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        config.campanas.videos[parseInt(inp.dataset.videoIndex)] = inp.value.trim();
+      });
+    });
+  }
+
+  function readFileAsDataUrl(file, cb){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=> cb(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  function fillAdminForm(){
+    el('f_heroTitle1').value = config.hero.title1;
+    el('f_heroTitle2').value = config.hero.title2;
+    el('f_heroVideoUrl').value = config.hero.videoUrl;
+
+    el('f_ubicTitle').value = config.ubicacion.title;
+    buildPhotoFields();
+    el('f_techList').value = config.ubicacion.tech.map(t=>`${t.b} | ${t.t}`).join('\n');
+
+    el('f_datosTitle').value = config.datos.title;
+    el('f_stat1').value = config.datos.stat1;
+    el('f_stat2').value = config.datos.stat2;
+    el('f_stat3').value = config.datos.stat3;
+    el('f_stat4').value = config.datos.stat4;
+    el('f_stat4label').value = config.datos.stat4label;
+    el('f_audienceTitle').value = config.datos.audienceTitle;
+    el('f_audienceDesc').value = config.datos.audienceDesc;
+
+    el('f_oroPrice').value = config.planes.oro.price;
+    el('f_oroPerUnit').value = config.planes.oro.perunit;
+    el('f_oroFeatures').value = config.planes.oro.features.join('\n');
+    el('f_plataPrice').value = config.planes.plata.price;
+    el('f_plataPerUnit').value = config.planes.plata.perunit;
+    el('f_plataFeatures').value = config.planes.plata.features.join('\n');
+
+    el('f_campTitle').value = config.campanas.title;
+    buildVideoFields();
+    el('f_mail1').value = config.campanas.mail1;
+    el('f_mail2').value = config.campanas.mail2;
+
+    el('f_newPass').value = '';
+  }
+
+  function collectAdminForm(){
+    config.hero.title1 = el('f_heroTitle1').value.trim();
+    config.hero.title2 = el('f_heroTitle2').value.trim();
+    config.hero.videoUrl = el('f_heroVideoUrl').value.trim();
+
+    config.ubicacion.title = el('f_ubicTitle').value.trim();
+    config.ubicacion.tech = el('f_techList').value.split('\n').filter(Boolean).map(line=>{
+      const [b,...rest] = line.split('|');
+      return {b:(b||'').trim(), t:rest.join('|').trim()};
+    });
+
+    config.datos.title = el('f_datosTitle').value.trim();
+    config.datos.stat1 = el('f_stat1').value.trim();
+    config.datos.stat2 = el('f_stat2').value.trim();
+    config.datos.stat3 = el('f_stat3').value.trim();
+    config.datos.stat4 = el('f_stat4').value.trim();
+    config.datos.stat4label = el('f_stat4label').value.trim();
+    config.datos.audienceTitle = el('f_audienceTitle').value.trim();
+    config.datos.audienceDesc = el('f_audienceDesc').value.trim();
+
+    config.planes.oro.price = el('f_oroPrice').value.trim();
+    config.planes.oro.perunit = el('f_oroPerUnit').value.trim();
+    config.planes.oro.features = el('f_oroFeatures').value.split('\n').filter(Boolean);
+    config.planes.plata.price = el('f_plataPrice').value.trim();
+    config.planes.plata.perunit = el('f_plataPerUnit').value.trim();
+    config.planes.plata.features = el('f_plataFeatures').value.split('\n').filter(Boolean);
+
+    config.campanas.title = el('f_campTitle').value.trim();
+    config.campanas.mail1 = el('f_mail1').value.trim();
+    config.campanas.mail2 = el('f_mail2').value.trim();
+
+    const newPass = el('f_newPass').value.trim();
+    if(newPass) config.password = newPass;
+  }
+
+  el('f_heroTitle1').value=''; // no-op placeholder to keep order
+
+  el('saveBtn').addEventListener('click', ()=>{
+    collectAdminForm();
+    persist();
+    render();
+    fillAdminForm();
+    const flash = el('saveFlash');
+    flash.classList.add('show');
+    setTimeout(()=>flash.classList.remove('show'), 1600);
+  });
+
+  el('resetBtn').addEventListener('click', ()=>{
+    if(!confirm('Esto va a restaurar todos los textos e imágenes originales. ¿Continuar?')) return;
+    config = JSON.parse(JSON.stringify(DEFAULTS));
+    persist();
+    render();
+    fillAdminForm();
+  });
+
+  el('exportBtn').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(config, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bbps-landing-config.json';
+    a.click();
+  });
+
+  el('importInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const imported = JSON.parse(reader.result);
+        config = deepMerge(JSON.parse(JSON.stringify(DEFAULTS)), imported);
+        persist();
+        render();
+        fillAdminForm();
+        alert('Contenido importado correctamente.');
+      }catch(err){
+        alert('El archivo no es un JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  /* ---------------- init ----------------
+     1) Intenta leer /config.json (el contenido "publicado" del repo).
+     2) Lo combina con los defaults embebidos como respaldo.
+     3) Aplica por encima cualquier edición guardada en este navegador
+        (localStorage), para que el panel siga sirviendo de vista previa. */
+  fetch('config.json', {cache:'no-store'})
+    .then(r => r.ok ? r.json() : null)
+    .then(json => {
+      if(json) DEFAULTS = deepMerge(JSON.parse(JSON.stringify(DEFAULTS)), json);
+    })
+    .catch(()=>{ /* sin config.json disponible (ej. abierto como archivo local): se usan los defaults embebidos */ })
+    .finally(()=>{
+      config = loadConfig();
+      render();
+    });
+})();
+</script>
+</body>
+</html>
