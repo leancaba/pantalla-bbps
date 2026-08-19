@@ -181,6 +181,25 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
 }
 .media-placeholder .ph-icon{font-size:34px;}
 .media-placeholder span{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em;}
+.media-loading{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;background:rgba(0,0,0,.35);z-index:2;
+}
+.media-loading.hidden{display:none;}
+.media-spinner{
+  width:38px;height:38px;border-radius:50%;
+  border:3px solid rgba(255,255,255,.25);border-top-color:var(--yellow);
+  animation:media-spin .8s linear infinite;
+}
+@keyframes media-spin{to{transform:rotate(360deg);}}
+.media-loading span{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:rgba(247,245,239,.85);text-transform:uppercase;}
+.media-error{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;background:rgba(20,0,0,.55);color:#fff;text-align:center;padding:14px;z-index:2;
+}
+.media-error.hidden{display:none;}
+.media-error .ph-icon{font-size:28px;}
+.media-error span{font-family:var(--mono);font-size:11px;letter-spacing:.03em;line-height:1.5;}
 .media-controls{
   position:absolute;left:12px;right:12px;bottom:12px;
   display:flex;gap:8px;justify-content:flex-end;
@@ -223,7 +242,7 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
   background:linear-gradient(150deg,var(--red),#8f0d12);
   min-height:100px;
 }
-.photo-box img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-box img{width:100%;height:100%;object-fit:contain;display:block;background:rgba(0,0,0,.15);}
 .photo-box .media-placeholder{color:#2a0000;}
 .tech-card{
   border:1.5px solid var(--line);
@@ -418,7 +437,19 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
 .admin-head h2{font-family:var(--display);font-size:1.2rem;}
 .admin-close{background:none;border:none;color:var(--white);font-size:20px;cursor:pointer;}
 .admin-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
-.admin-tabs button{
+.publish-banner{
+  display:flex;gap:10px;align-items:flex-start;
+  background:rgba(255,212,0,0.1);
+  border:1px solid rgba(255,212,0,0.35);
+  border-radius:10px;
+  padding:10px 12px;
+  margin-bottom:16px;
+  font-size:12px;
+  line-height:1.5;
+  color:rgba(247,245,239,.9);
+}
+.publish-banner-icon{color:var(--yellow);flex-shrink:0;}
+.publish-banner code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:11px;}.admin-tabs button{
   background:#1a1a1a;border:1px solid var(--line);color:rgba(247,245,239,.75);
   padding:6px 10px;border-radius:20px;font-size:12px;cursor:pointer;
 }
@@ -498,6 +529,14 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
           <div class="ph-icon">▶</div>
           <span>VIDEO</span>
         </div>
+        <div class="media-loading hidden" id="heroMediaLoading">
+          <div class="media-spinner"></div>
+          <span>Cargando video…</span>
+        </div>
+        <div class="media-error hidden" id="heroMediaError">
+          <div class="ph-icon">⚠</div>
+          <span>No se pudo cargar el video.<br>Revisá que la URL sea un .mp4 directo.</span>
+        </div>
         <video id="heroVideo" class="hidden" muted loop playsinline></video>
         <div class="media-controls">
           <button class="ctrl-btn" id="heroPlayBtn" aria-label="Reproducir o pausar">⏸</button>
@@ -514,9 +553,9 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
       <h2 class="section-title" id="ubicTitle">UBICACIÓN DE ALTO IMPACTO<br>Y VALOR COMERCIAL</h2>
       <div class="ubic-grid">
         <div class="photo-stack" id="photoStack">
-          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><img class="hidden" alt="Foto de la ubicación 1"></div>
-          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><img class="hidden" alt="Foto de la ubicación 2"></div>
-          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><img class="hidden" alt="Foto de la ubicación 3"></div>
+          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><div class="media-loading hidden"><div class="media-spinner"></div><span>Cargando…</span></div><div class="media-error hidden"><div class="ph-icon">⚠</div><span>No se pudo cargar la imagen.<br>Revisá la ruta.</span></div><img class="hidden" alt="Foto de la ubicación 1"></div>
+          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><div class="media-loading hidden"><div class="media-spinner"></div><span>Cargando…</span></div><div class="media-error hidden"><div class="ph-icon">⚠</div><span>No se pudo cargar la imagen.<br>Revisá la ruta.</span></div><img class="hidden" alt="Foto de la ubicación 2"></div>
+          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><div class="media-loading hidden"><div class="media-spinner"></div><span>Cargando…</span></div><div class="media-error hidden"><div class="ph-icon">⚠</div><span>No se pudo cargar la imagen.<br>Revisá la ruta.</span></div><img class="hidden" alt="Foto de la ubicación 3"></div>
         </div>
         <div class="tech-card">
           <h3>DATOS TÉCNICOS</h3>
@@ -633,6 +672,10 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
   </div>
 
   <div id="editScreen" class="hidden">
+    <div class="publish-banner">
+      <span class="publish-banner-icon">⚠</span>
+      <span>Esto es una <b>vista previa</b>, solo la ves vos. Para que el resto vea los cambios: <b>Guardar</b> → pestaña <b>Ajustes</b> → <b>Exportar JSON</b> → reemplazá <code>config.json</code> en el repo → <code>commit</code> + <code>push</code>.</span>
+    </div>
     <div class="admin-tabs" id="adminTabs">
       <button data-tab="hero" class="active">Inicio</button>
       <button data-tab="ubicacion">Ubicación</button>
@@ -722,7 +765,7 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
 
     <div class="admin-actions">
       <button class="btn" id="saveBtn">Guardar cambios</button>
-      <span class="save-flash" id="saveFlash">Guardado ✓</span>
+      <span class="save-flash" id="saveFlash">Vista previa guardada ✓ — recordá exportar y subir el JSON para publicarlo</span>
     </div>
   </div>
 </div>
@@ -818,8 +861,11 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     // HERO
     el('heroTitle1').textContent = config.hero.title1;
     el('heroTitle2').innerHTML = config.hero.title2.split('/').map(escapeHtml).join('<br>');
-    if(config.hero.logos){ el('heroLogos').src = config.hero.logos; document.querySelectorAll('.foot-logos img').forEach(i=>i.src=config.hero.logos); }
-    setMedia(el('heroVideo'), el('heroMediaPlaceholder'), config.hero.videoUrl);
+    if(config.hero.logos){
+      loadImage(el('heroLogos'), config.hero.logos);
+      document.querySelectorAll('.foot-logos img').forEach(i=> loadImage(i, config.hero.logos));
+    }
+    setMedia(el('heroVideo'), el('heroMediaPlaceholder'), config.hero.videoUrl, el('heroMediaLoading'), el('heroMediaError'));
 
     // UBICACION
     el('ubicTitle').innerHTML = config.ubicacion.title.split('/').map(escapeHtml).join('<br>');
@@ -827,9 +873,20 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     photoBoxes.forEach((box,i)=>{
       const img = box.querySelector('img');
       const ph = box.querySelector('.media-placeholder');
+      const loading = box.querySelector('.media-loading');
+      const errorEl = box.querySelector('.media-error');
       const src = config.ubicacion.photos[i];
-      if(src){ img.src=src; img.classList.remove('hidden'); ph.classList.add('hidden'); }
-      else { img.classList.add('hidden'); ph.classList.remove('hidden'); }
+      if(src){
+        errorEl.classList.add('hidden');
+        loading.classList.remove('hidden');
+        ph.classList.add('hidden');
+        img.classList.add('hidden');
+        img.onload = ()=>{ loading.classList.add('hidden'); img.classList.remove('hidden'); };
+        img.onerror = ()=>{ loading.classList.add('hidden'); img.classList.add('hidden'); errorEl.classList.remove('hidden'); };
+        img.src = normalizeAssetUrl(src);
+      } else {
+        img.classList.add('hidden'); loading.classList.add('hidden'); errorEl.classList.add('hidden'); ph.classList.remove('hidden');
+      }
     });
     el('techList').innerHTML = config.ubicacion.tech.map(item=>`<li><b>${escapeHtml(item.b)}</b> – ${escapeHtml(item.t)}</li>`).join('');
 
@@ -887,15 +944,52 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  function setMedia(videoEl, placeholderEl, url){
+  function normalizeAssetUrl(url){
+    // Convierte links de GitHub "blob" (página HTML) en el link "raw" del archivo real,
+    // por si alguien pega ese link por error en vez de la ruta relativa (assets/archivo.mp4).
+    const m = url.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/i);
+    if(m){
+      return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}`;
+    }
+    return url;
+  }
+
+  function loadImage(imgEl, url){
+    if(!url) return;
+    const fixed = normalizeAssetUrl(url);
+    imgEl.onerror = ()=>{
+      if(imgEl.src.indexOf('assets/logos.png') === -1){
+        console.warn('No se pudo cargar la imagen:', url, '— se usa el logo por defecto como respaldo.');
+        imgEl.src = 'assets/logos.png';
+      }
+    };
+    imgEl.src = fixed;
+  }
+
+  function setMedia(videoEl, placeholderEl, url, loadingEl, errorEl){
+    if(errorEl) errorEl.classList.add('hidden');
     if(url){
-      videoEl.src = url;
-      videoEl.classList.remove('hidden');
+      const fixedUrl = normalizeAssetUrl(url);
+      if(loadingEl) loadingEl.classList.remove('hidden');
       placeholderEl.classList.add('hidden');
+      videoEl.classList.add('hidden');
+
+      videoEl.onloadstart = ()=>{ if(loadingEl) loadingEl.classList.remove('hidden'); if(errorEl) errorEl.classList.add('hidden'); };
+      videoEl.oncanplay = ()=>{ if(loadingEl) loadingEl.classList.add('hidden'); videoEl.classList.remove('hidden'); };
+      videoEl.onwaiting = ()=>{ if(loadingEl) loadingEl.classList.remove('hidden'); };
+      videoEl.onplaying = ()=>{ if(loadingEl) loadingEl.classList.add('hidden'); };
+      videoEl.onerror = ()=>{
+        if(loadingEl) loadingEl.classList.add('hidden');
+        videoEl.classList.add('hidden');
+        if(errorEl) errorEl.classList.remove('hidden'); else placeholderEl.classList.remove('hidden');
+      };
+
+      videoEl.src = fixedUrl;
       videoEl.muted = true; videoEl.play().catch(()=>{});
     } else {
       videoEl.removeAttribute('src');
       videoEl.classList.add('hidden');
+      if(loadingEl) loadingEl.classList.add('hidden');
       placeholderEl.classList.remove('hidden');
     }
   }
@@ -974,6 +1068,8 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
       item.dataset.index = i;
       item.innerHTML = `
         <div class="media-placeholder"><div class="ph-icon">▶</div><span>VIDEO</span></div>
+        <div class="media-loading hidden"><div class="media-spinner"></div><span>Cargando video…</span></div>
+        <div class="media-error hidden"><div class="ph-icon">⚠</div><span>No se pudo cargar el video.<br>Revisá que la URL sea un .mp4 directo.</span></div>
         <video muted loop playsinline class="hidden"></video>
         <div class="media-controls">
           <button class="ctrl-btn play-btn" aria-label="Reproducir o pausar">⏸</button>
@@ -981,7 +1077,9 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
         </div>`;
       const v = item.querySelector('video');
       const ph = item.querySelector('.media-placeholder');
-      setMedia(v, ph, url);
+      const loading = item.querySelector('.media-loading');
+      const errorEl = item.querySelector('.media-error');
+      setMedia(v, ph, url, loading, errorEl);
       item.querySelector('.play-btn').addEventListener('click', (e)=>{
         e.stopPropagation();
         if(v.classList.contains('hidden')) return;
@@ -1119,7 +1217,7 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     });
     wrap.querySelectorAll('input[data-photo-index]').forEach(inp=>{
       inp.addEventListener('change', ()=>{
-        config.ubicacion.photos[parseInt(inp.dataset.photoIndex)] = inp.value.trim();
+        config.ubicacion.photos[parseInt(inp.dataset.photoIndex)] = normalizeAssetUrl(inp.value.trim());
       });
     });
   }
@@ -1136,7 +1234,7 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     });
     wrap.querySelectorAll('input[data-video-index]').forEach(inp=>{
       inp.addEventListener('change', ()=>{
-        config.campanas.videos[parseInt(inp.dataset.videoIndex)] = inp.value.trim();
+        config.campanas.videos[parseInt(inp.dataset.videoIndex)] = normalizeAssetUrl(inp.value.trim());
       });
     });
   }
@@ -1178,8 +1276,8 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
   function collectAdminForm(){
     config.hero.title1 = el('f_heroTitle1').value.trim();
     config.hero.title2 = el('f_heroTitle2').value.trim();
-    config.hero.videoUrl = el('f_heroVideoUrl').value.trim();
-    config.hero.logos = el('f_heroLogos').value.trim();
+    config.hero.videoUrl = normalizeAssetUrl(el('f_heroVideoUrl').value.trim());
+    config.hero.logos = normalizeAssetUrl(el('f_heroLogos').value.trim());
 
     config.ubicacion.title = el('f_ubicTitle').value.trim();
     config.ubicacion.tech = el('f_techList').value.split('\n').filter(Boolean).map(line=>{
