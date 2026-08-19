@@ -76,8 +76,13 @@ button{font-family:inherit;}
   align-items:center;
   justify-content:center;
   padding:clamp(20px,4vw,60px);
-  overflow:hidden;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
+/* resguardo: si algún contenido queda más alto que la pantalla, se puede
+   scrollear dentro del propio bloque en vez de recortarse arriba/abajo */
+.panel::-webkit-scrollbar{width:6px;}
+.panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px;}
 .panel-inner{
   width:100%;
   max-width:1180px;
@@ -235,8 +240,9 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
   grid-template-columns:1.3fr 1fr;
   gap:clamp(16px,2.6vw,34px);
   align-items:stretch;
+  height:clamp(320px, 60vh, 620px);
 }
-.photo-stack{display:grid;grid-template-rows:repeat(3,1fr);gap:clamp(10px,1.6vh,16px);height:100%;}
+.photo-stack{display:grid;grid-template-rows:repeat(2,1fr);gap:clamp(10px,1.6vh,16px);height:100%;}
 .photo-box{
   position:relative;border-radius:14px;overflow:hidden;
   background:linear-gradient(150deg,var(--red),#8f0d12);
@@ -252,6 +258,7 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
   justify-content:center;
   gap:14px;
   background:radial-gradient(circle at 30% 0%, rgba(255,212,0,0.05), transparent 60%);
+  overflow-y:auto;
 }
 .tech-card h3{font-size:clamp(1.3rem,2vw,1.7rem);text-align:center;margin-bottom:6px;}
 .tech-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
@@ -481,8 +488,8 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
 .save-flash.show{opacity:1;}
 
 @media (max-width:760px){
-  .ubic-grid{grid-template-columns:1fr;}
-  .photo-stack{grid-template-rows:repeat(3,110px);}
+  .ubic-grid{grid-template-columns:1fr;height:auto;max-height:none;}
+  .photo-stack{grid-template-rows:repeat(2,140px);}
   .stats-grid{grid-template-columns:1fr;}
   .planes-grid{grid-template-columns:1fr;}
   .dots-nav{right:8px;}
@@ -555,7 +562,6 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
         <div class="photo-stack" id="photoStack">
           <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><div class="media-loading hidden"><div class="media-spinner"></div><span>Cargando…</span></div><div class="media-error hidden"><div class="ph-icon">⚠</div><span>No se pudo cargar la imagen.<br>Revisá la ruta.</span></div><img class="hidden" alt="Foto de la ubicación 1"></div>
           <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><div class="media-loading hidden"><div class="media-spinner"></div><span>Cargando…</span></div><div class="media-error hidden"><div class="ph-icon">⚠</div><span>No se pudo cargar la imagen.<br>Revisá la ruta.</span></div><img class="hidden" alt="Foto de la ubicación 2"></div>
-          <div class="photo-box"><div class="media-placeholder"><span>FOTO</span></div><div class="media-loading hidden"><div class="media-spinner"></div><span>Cargando…</span></div><div class="media-error hidden"><div class="ph-icon">⚠</div><span>No se pudo cargar la imagen.<br>Revisá la ruta.</span></div><img class="hidden" alt="Foto de la ubicación 3"></div>
         </div>
         <div class="tech-card">
           <h3>DATOS TÉCNICOS</h3>
@@ -793,7 +799,7 @@ h1,h2,h3{font-family:var(--display);margin:0;font-weight:800;line-height:1.02;}
     },
     ubicacion:{
       title:"UBICACIÓN DE ALTO IMPACTO/Y VALOR COMERCIAL",
-      photos:["","",""],
+      photos:["",""],
       tech:[
         {b:"20 M2", t:"Pantalla superior"},
         {b:"6 M2", t:"Laterales"},
