@@ -55,10 +55,18 @@ Desde el panel podés editar, por sección: títulos, precios, características 
 
 Si en algún momento el panel muestra algo raro (por ejemplo, después de importar un JSON viejo), **Restaurar contenido original** lo vuelve a dejar como el `config.json` publicado.
 
-## 4) Fotos y videos
+## 4) Fotos, logo y videos
 
-- **Fotos y logo**: se suben directo desde el panel. El propio navegador las redimensiona y comprime antes de guardarlas (fotos: hasta 1600px de lado, JPG calidad 85%; logo: hasta 1000px, PNG para conservar la transparencia), así una foto de cámara de varios MB queda en un tamaño manejable automáticamente. Aun así, `localStorage` tiene un límite de unos 5 MB por sitio — en la pestaña **Ajustes** hay una barra que muestra cuánto espacio se está usando. Si se llena, exportá el JSON como respaldo y bajá el peso de alguna foto.
-- Para producción, si `config.json` termina pesando mucho por tener varias fotos en base64, conviene reemplazar esas imágenes por archivos reales dentro de `/assets` (ej. `assets/foto-1.jpg`) y poner esa ruta en el campo correspondiente en vez de subir el archivo — el resultado es un sitio más liviano y rápido.
+Las fotos, el logo y los videos se cargan todos de la misma forma: **subís el archivo a la carpeta `/assets` del repo y pegás la ruta** (ej. `assets/foto-1.jpg`, `assets/campana-1.mp4`) en el campo correspondiente del panel. También podés pegar una URL completa a un archivo alojado en otro lado (ej. Cloudflare R2, Bunny.net).
+
+El panel **ya no sube archivos como imagen incrustada** (esto se probó al principio y generaba errores de "almacenamiento lleno" apenas se cargaban un par de fotos de buena calidad, además de perderse al recargar la página). El campo de texto es la forma confiable de referenciar cualquier imagen o video, sin límite de tamaño en el navegador.
+
+Para subir archivos nuevos a `/assets`, la forma más simple es con **GitHub Desktop**: cloná el repo a tu PC, copiá los archivos dentro de la carpeta `assets`, y hacé commit + push desde la app. (Ver sección 1 para más detalle).
+
+Recomendación de peso: para que la página cargue rápido, especialmente en celular, comprimí las fotos (JPG, idealmente bajo 500 KB–1 MB) y los videos antes de subirlos. Para video, por ejemplo:
+```bash
+ffmpeg -i original.mov -vf scale=1080:-2 -c:v libx264 -crf 26 -preset slow -c:a aac -b:a 128k salida.mp4
+```
 - **Videos**: se referencian por URL a un archivo `.mp4` (no YouTube/Vimeo, que no se pueden insertar como `<video>` directo). Lo más simple es subir los `.mp4` a la carpeta `/assets` del repo y usar una ruta relativa, por ejemplo `assets/campana-1.mp4`.
 
 ## 5) Funcionalidades incluidas
